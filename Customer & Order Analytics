@@ -1,4 +1,4 @@
---This project was to analyze some customer purchases in January and February.
+--In this SQL, I'm querying a database with multiple tables in it to quantify statistics about customer and order data.
 
 
 --total number of orders placed in Jan
