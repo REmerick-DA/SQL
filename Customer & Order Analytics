@@ -66,3 +66,35 @@ ON Feb.orderid=cust.order_id
 WHERE Feb.Quantity>2
 AND length(orderid) = 6
 AND orderid <> 'Order ID';
+
+--displays timestamp of each order made in date range
+SELECT orderdate
+FROM BIT_DB.FebSales
+WHERE orderdate between '02/13/19 00:00' AND '02/18/19 00:00';
+
+--displays where the order placed at the specific timestamp was shipped to
+SELECT location
+FROM BIT_DB.FebSales
+WHERE orderdate = '02/18/19 01:35';
+
+--displays the total number of collective items sold on the date selected with any timestamp
+SELECT sum(quantity)
+FROM BIT_DB.FebSales
+WHERE orderdate like '02/18/19%';
+
+--displays any product names that contain the name 'Batteries' from the list of products purchased
+SELECT distinct Product
+FROM BIT_DB.FebSales
+WHERE Product like '%Batteries%';
+
+
+--displays any product name that ends with .99 in the price
+SELECT distinct Product, Price
+FROM BIT_DB.FebSales
+WHERE Price like '%.99';
+
+--list of all products sold in Los Angeles in February and the quantity of each
+SELECT Product, SUM(quantity)
+FROM BIT_DB.FebSales
+WHERE location like '%Los Angeles%'
+GROUP BY Product;
