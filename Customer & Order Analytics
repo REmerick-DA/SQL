@@ -98,3 +98,61 @@ SELECT Product, SUM(quantity)
 FROM BIT_DB.FebSales
 WHERE location like '%Los Angeles%'
 GROUP BY Product;
+
+--Locations in New York that received at least 3 orders in January and # of orders received
+SELECT distinct location, count(orderID)
+FROM BIT_DB.JanSales
+WHERE location like '%NY%'
+AND length(orderID) = 6
+AND orderID <> 'Order ID'
+GROUP BY location
+HAVING count(orderID)>2
+;
+
+--Each type of headphone sold in February
+SELECT distinct Product, count(Quantity) As quantity
+FROM BIT_DB.FebSales
+WHERE Product like '%Headphone%'
+GROUP BY Product
+;
+
+--Average of $ spent across accounts in February
+SELECT SUM(quantity*price)/count(cust.acctnum) 
+FROM BIT_DB.FebSales Feb
+--connection between customer and sales tables needed
+LEFT JOIN BIT_DB.customers cust
+ON Feb.orderid=cust.order_id
+--filters to erase "blanks"
+WHERE length(orderid)=6
+AND orderid <> 'Order ID'
+;
+--ALTERNATIVELY--
+SELECT avg(quantity*price)
+FROM BIT_DB.FebSales Feb
+--connection between customer and sales tables needed
+LEFT JOIN BIT_DB.customers cust
+ON Feb.orderid=cust.order_id
+--filters
+WHERE length(orderid) = 6
+AND orderid <> 'Order ID'
+;
+
+--Average quantity of products purchased across accounts for February
+SELECT sum(quantity)/count(cust.acctnum)
+FROM BIT_DB.FebSales Feb
+--connection between customer and sales tables needed
+LEFT JOIN BIT_DB.customers cust
+ON feb.orderid=cust.order_id
+--filtering out "blanks"
+WHERE length(orderid)=6
+AND orderid <> 'Order ID'
+;
+
+--Highest revenue product in month of January and total revenue brought in on that product
+SELECT product,
+sum(quantity*price)
+FROM BIT_DB.JanSales
+GROUP BY product
+ORDER BY sum(quantity*price) desc
+LIMIT 1
+;
