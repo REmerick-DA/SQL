@@ -1,0 +1,158 @@
+--I was tasked to analyze a dataset and answer specific queries regarding Music Sales by a distributor. The queries and questions are below.
+--display sample
+Select * FROM chinook.tracks LIMIT 5;
+SELECT * FROM chinook.customers LIMIT 5;
+
+
+--Show Customers (their full names, customer ID, and country) who are not in the US.
+SELECT *
+FROM chinook.customers
+WHERE Country <> 'USA';
+--More specific to request
+SELECT FirstName, LastName, CustomerID, Country
+FROM chinook.customers
+WHERE Country <> 'USA';
+
+--Show only the Customers from Brazil
+SELECT *
+FROM chinook.customers
+WHERE Country = 'Brazil';
+
+--Find the Invoices of customers who are from Brazil. 
+--The resulting table should show the customer's full name, Invoice ID, Date of the invoice, and billing country.
+SELECT FirstName, LastName, InvoiceID, InvoiceDate, BillingCountry
+FROM chinook.customers
+--Linking customer and invoice tables for all info needed
+INNER JOIN chinook.invoices
+ON customers.CustomerID = invoices.CustomerID
+--Filter to only show Brazil
+WHERE Country = 'Brazil';
+
+--Show the Employees who are Sales Agents.
+SELECT * FROM employees LIMIT 5; --sample display
+SELECT LastName, FirstName, Title
+FROM chinook.employees
+WHERE Title like '%Agent';
+
+--Find a unique/distinct list of billing countries from the Invoice table.
+SELECT distinct BillingCountry
+FROM chinook.invoices;
+
+--Provide a query that shows the invoices associated with each sales agent. 
+--The resulting table should include the Sales Agent's full name.
+--Items needing displayed established
+SELECT employees.LastName, employees.FirstName, invoices.InvoiceId
+FROM chinook.employees
+--2 joins needed to pull 3 tables for common link. First join below to link.
+JOIN chinook.customers ON customers.SupportRepID = employees.EmployeeId
+--2nd join to pull needed info using the link join created
+JOIN chinook.Invoices ON invoices.CustomerId = customers.CustomerId;
+
+--Show the Invoice Total, Customer name, Country, and Sales Agent name for all invoices and customers.
+SELECT employees.LastName, employees.FirstName, customers.FirstName, customers.LastName, customers.Country, 
+invoices.Total
+FROM chinook.employees
+--Grouping which tables items come from
+--invoice: Total; employees:LastName, FirstName; 
+--customers: FirstName, LastName, Country
+--2 joins needed to display all items: employees employeeid to customers by supportrepid;
+JOIN chinook.customers
+ON employees.EmployeeId = customers.SupportRepId 
+--customers customerid to invoices customer id
+JOIN invoices
+ON invoices.CustomerId = customers.CustomerId
+;
+
+--How many Invoices were there in 2009?
+SELECT COUNT(InvoiceID)
+FROM chinook.invoices
+WHERE InvoiceDate like '2009%';
+--ALTERNATIVE, SAME RESULT--
+SELECT COUNT(*)
+FROM CHINOOK.invoices
+WHERE InvoiceDate BETWEEN '2009-01-01' AND '2009-12-31';
+
+--What are the total sales for 2009?
+SELECT SUM(Total)
+FROM chinook.invoices
+WHERE InvoiceDate BETWEEN '2009-01-01' AND '2009-12-31';
+
+--Write a query that includes the purchased track name with each invoice line ID.
+--items needed: Name, TrackID, InvoiceLineID
+--invoice_items: InvoiceLineID; tracks: Name; Shared column: TrackID
+SELECT Name, InvoiceLineID
+FROM chinook.invoice_items
+--link both tables by TrackID
+JOIN chinook.tracks
+ON invoice_items.TrackId = tracks.TrackID
+;
+
+--Write a query that includes the purchased track name AND artist name with each invoice line ID.
+--items needed: Name, TrackID, InvoiceLineID, Name, ArtistId, AlbumId
+--invoice_items: InvoiceLineID; tracks: Name; artists: Name, ArtistId; albums:AlbumID
+SELECT tracks.Name AS 'Track', InvoiceLineID, artists.Name AS 'Artist'
+FROM chinook.invoice_items
+--first join needed
+LEFT JOIN chinook.tracks
+ON invoice_items.TrackId = tracks.TrackID
+--second join needed
+INNER JOIN chinook.albums
+ON tracks.AlbumId = albums.AlbumId
+--third join needed
+LEFT JOIN chinook.artists
+ON albums.ArtistId = artists.ArtistId 
+;
+
+--Provide a query that shows all the Tracks, and include the Album name, Media type, and Genre.
+--tracks: Name, MediaTypeId, GenreId, AlbumId; genres: GenreId, Name; media_types: MediaTypeId, Name; 
+--albums: AlbumId, Title
+SELECT tracks.Name AS 'Track', genres.Name AS 'Genre', media_types.Name AS 'Media Type', albums.Title AS 'Album'
+FROM tracks
+--3 joins needed to link all together by id type.
+--first join
+JOIN genres
+ON tracks.GenreId = genres.GenreId
+--second join
+JOIN media_types
+ON tracks.MediaTypeId = media_types.MediaTypeId
+--third join
+JOIN albums
+ON tracks.AlbumId = albums.AlbumId
+--CLEANUP
+ORDER BY Album
+;
+
+--Show the total sales made by each sales agent.
+--NEED: employees-LastName, FirstName, EmployeeId
+--NEED: invoices-Total, CustomerID
+--NEED: customers-CustomerID, SupportRepId
+SELECT employees.LastName, employees.FirstName,
+ROUND(SUM(invoices.total), 2) AS 'Total Sales'
+FROM employees
+--link employee table to customer table, EmployeeID=SupportRepID
+JOIN customers
+ON customers.SupportRepId = employees.EmployeeId
+--link invoices table to customer table
+JOIN invoices
+ON customers.CustomerId = invoices.CustomerId
+--filter type of employee
+WHERE employees.Title = 'Sales Support Agent'
+GROUP BY employees.FirstName
+;
+
+--Which sales agent made the most dollars in sales in 2009?
+SELECT employees.LastName, employees.FirstName,
+ROUND(SUM(invoices.total), 2) AS 'Total Sales'
+FROM employees
+--link employee table to customer table, EmployeeID=SupportRepID
+JOIN customers
+ON customers.SupportRepId = employees.EmployeeId
+--link invoices table to customer table
+JOIN invoices
+ON customers.CustomerId = invoices.CustomerId
+--filter type of employee and which one was top
+WHERE employees.Title = 'Sales Support Agent'
+GROUP BY employees.FirstName
+ORDER BY (ROUND(SUM(invoices.total), 2)) DESC LIMIT 1
+;
+
